@@ -67,6 +67,7 @@ describe('Navigation / Checkout flow', () => {
 
   it('User removes an item from the cart', async () => {
     await CartContent.removeSwagItem(SELECTORS.products.backpack.name);
+    await driver.pause(500); // small pause to allow UI update
     expect(await CartContent.getSwagItemCount()).toBe(1);
     console.log('DEBUG after remove count:', await CartContent.getSwagItemCount());
   });
