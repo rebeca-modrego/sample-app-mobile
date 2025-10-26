@@ -17,8 +17,39 @@ describe('Navigation / Checkout flow', () => {
     SELECTORS = languageSelectors(driver.config);
   });
 
-  it('User logs in', async () => {
-    await restartApp();
+  it('should show an error when no username is provided', async () => {
+      await restartApp();
+      await LoginScreen.signIn(LOGIN_USERS.NO_USER_DETAILS);
+      let errorText;
+      errorText = await LoginScreen.getErrorMessage2();
+      console.log('errorText:', errorText);
+      expect(errorText).toContain(SELECTORS.login.errors.username);
+  });
+
+  it('should show an error when no password is provided', async () => {
+      await LoginScreen.signIn(LOGIN_USERS.NO_PASSWORD);
+      let errorText;
+      errorText = await LoginScreen.getErrorMessage2(10000, true);
+      console.log('errorText:', errorText);
+      expect(errorText).toContain(SELECTORS.login.errors.password);
+      });
+
+  it('should not be able to login with a locked user', async () => {
+      //await restartApp();
+      await LoginScreen.signIn(LOGIN_USERS.LOCKED);
+      let errorText;
+      errorText = await LoginScreen.getErrorMessage2();
+      expect(errorText).toContain(SELECTORS.login.errors.lockedOut);
+  });
+
+  it('should show an error when no match is found', async () => {
+      await LoginScreen.signIn(LOGIN_USERS.NO_MATCH);
+      let errorText;
+      errorText = await LoginScreen.getErrorMessage2();
+      expect(errorText).toContain(SELECTORS.login.errors.noMatch);
+  });
+
+  it('User logs in with standard user', async () => {
     await LoginScreen.signIn(LOGIN_USERS.STANDARD);
     await InventoryListScreen.waitForIsShown();
   });
