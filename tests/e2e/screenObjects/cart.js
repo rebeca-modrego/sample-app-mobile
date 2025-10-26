@@ -34,7 +34,7 @@ class CartContent extends Base {
 	 *
 	 * @return the selected cart item
 	 */
-	swagItem(needle) {
+	async swagItem(needle) {
 		if (typeof needle === 'string') {
 			return this.swagItems.find(cartItem => getTextOfElement(cartItem).includes(needle));
 		}
@@ -49,16 +49,25 @@ class CartContent extends Base {
 	 *
 	 * @return {string}
 	 */
-	getSwagItemText(needle) {
-		return getTextOfElement(this.swagItem(needle));
-	}
+	async getSwagItemText(needle) {
+        const item = await this.swagItem(needle);
+        if (!item) return '';
+        return (await getTextOfElement(item).catch(() => '')) || '';
+    }
+
+    async getSwagItemCount() {
+        // small pause to allow UI update after mutating actions
+        await driver.pause(200);
+        const items = await $$(`~test-${ this.SELECTORS.cartContent.cartItem.itemContainer }`).catch(() => []);
+        return (items && items.length) || 0;
+    }
 
 	/**
 	 * Remove the first item from the cart
 	 *
 	 * @return {void}
 	 */
-	removeSwagItem() {
+	async removeSwagItem() {
 		return this.swagItems[ 0 ].$(`~test-${ this.SELECTORS.cartContent.cartItem.remove }`).click();
 	}
 
@@ -67,14 +76,14 @@ class CartContent extends Base {
 	 *
 	 * @return {void}
 	 */
-	deleteSwagItem() {
+	async deleteSwagItem() {
 		return $(`~test-${ this.SELECTORS.cartContent.cartItem.delete }`).click();
 	}
 
 	/**
 	 * Open the delete option with a swipe to left
 	 */
-	swipeToOpenDeleteButton() {
+	async swipeToOpenDeleteButton() {
 		Gestures.swipeItemLeft(this.swagItems[ 0 ]);
 
 		// Wait for the animation
@@ -86,7 +95,7 @@ class CartContent extends Base {
 	 *
 	 * @return {void}
 	 */
-	continueShopping() {
+	async continueShopping() {
 		Gestures.scrollToElement({element: this.continueShoppingButton, swipeDirection: 'up' });
 
 		return this.continueShoppingButton.click();
@@ -97,7 +106,7 @@ class CartContent extends Base {
 	 *
 	 * @return {void}
 	 */
-	goToCheckout() {
+	async goToCheckout() {
 		Gestures.scrollToElement({ element: this.checkoutButton, swipeDirection: 'up' });
 
 		return this.checkoutButton.click();

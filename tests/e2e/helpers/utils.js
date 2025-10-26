@@ -4,12 +4,21 @@ import { BUNDLE_IDS, DEFAULT_TIMEOUT } from './e2eConstants';
  * The app is opened by Appium by default, when we start a new test
  * the app needs to be reset
  */
-export function restartApp() {
-	if (!driver.firstAppStart) {
-		driver.reset();
-	}
-	// Set the firstAppstart to false to say that the following test can be reset
-	driver.firstAppStart = false;
+export async function restartApp() {
+	const appPackage = 'com.swaglabsmobileapp';
+	try {
+        // Terminate the app if it's running
+        await driver.execute('mobile: terminateApp', { appId: appPackage });
+
+        // Optionally clear app data if you want a clean state
+        // await driver.execute('mobile: clearApp', { appId: appPackage });
+
+        // Activate the app again
+        await driver.execute('mobile: activateApp', { appId: appPackage });
+    } catch (err) {
+        console.error('Error restarting the app:', err);
+        throw err;
+    }
 }
 
 
@@ -21,31 +30,70 @@ export function restartApp() {
  *
  * @return {string}
  */
-export function getTextOfElement(element, isXpath = false) {
-	let visualText;
+// ...existing code...
+export async function getTextOfElement(element, isXpath = false) {
+    // tolerate null/undefined
+    if (!element) return '';
 
-	try {
-		if (driver.isAndroid) {
-			visualText = element.$$('*//android.widget.TextView').reduce((currentValue, el) => `${ currentValue } ${ el.getText() }`, '');
-			// Fallback
-			if (visualText === ''){
-				visualText = element.getText();
-			}
-		} else {
-			const iosElement = isXpath ? element.$$('*//XCUIElementTypeStaticText') : element;
-			if (isXpath) {
-				visualText = element.$$('*//XCUIElementTypeStaticText').reduce((currentValue, el) => `${ currentValue } ${ el.getText() }`, '');
-			} else {
-				visualText = iosElement.getText();
-			}
-		}
-	} catch (e) {
-		visualText = element.getText();
-	}
+    // If a plain element object was passed (logged/serialized), re-query by selector
+    if (typeof element.getText !== 'function' && element && element.selector) {
+        try {
+            element = await $(element.selector);
+        } catch (_) {
+            // fallback continue — next checks will detect non-existing element
+        }
+    }
 
-	return visualText.trim();
+    // now ensure we have a WebdriverIO element
+    if (!element || typeof element.getText !== 'function') return '';
+
+    // ensure it exists
+    const exists = await element.isExisting().catch(() => false);
+    if (!exists) return '';
+
+    try {
+        // Android: try nested TextViews first
+        if (driver.isAndroid) {
+            let visualText = '';
+            const textViews = await element.$$('android.widget.TextView').catch(() => []);
+            if (textViews && textViews.length) {
+                const parts = [];
+                for (const tv of textViews) {
+                    parts.push((await tv.getText().catch(() => '')).trim());
+                }
+                visualText = parts.filter(Boolean).join(' ').trim();
+            }
+            if (!visualText) {
+                visualText = (await element.getText().catch(() => '')) || (await element.getAttribute('text').catch(() => '')) || '';
+            }
+            return visualText.trim();
+        }
+
+        // iOS: static texts or attributes
+        if (driver.isIOS) {
+            let visualText = '';
+            if (isXpath) {
+                const staticTexts = await element.$$('XCUIElementTypeStaticText').catch(() => []);
+                if (staticTexts && staticTexts.length) {
+                    const parts = [];
+                    for (const st of staticTexts) parts.push((await st.getText().catch(() => '')).trim());
+                    visualText = parts.filter(Boolean).join(' ').trim();
+                }
+            }
+            if (!visualText) {
+                visualText = (await element.getText().catch(() => '')) || (await element.getAttribute('label').catch(() => '')) || (await element.getAttribute('value').catch(() => '')) || '';
+            }
+            return visualText.trim();
+        }
+
+        // fallback
+        return ((await element.getText().catch(() => '')) || (await element.getAttribute('text').catch(() => '')) || '').trim();
+    } catch (e) {
+        // last resort
+        return ((await element.getText().catch(() => '')) || '').trim();
+    }
 }
-
+// ...existing code...
 /**
  * Get the app state for iOS, see
  * http://appium.io/docs/en/writing-running-appium/ios/ios-xctest-mobile-apps-management/
@@ -218,11 +266,12 @@ export function openDeepLinkUrl(url) {
  *
  * @returns {*}
  */
-export function languageSelectors() {
+export function languageSelectors(driverConfig) {
 	const DEFAULT_LANGUAGE = 'en';
 	let selectors;
-	const { language } = driver.config;
 	const path = '../../../src/js/config/translations';
+	const language = driverConfig?.language || DEFAULT_LANGUAGE;
+  
 
 	try {
 		selectors = require(`${ path }/${ language }`);

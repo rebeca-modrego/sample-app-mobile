@@ -23,15 +23,36 @@ class CheckoutComplete extends Base {
 	 * Continue shopping by scrolling to the button and click on it.
 	 * The button is not visible on all screens
 	 */
-	continueShopping() {
-		Gestures.scrollToElement({
-			element: this.continuesShoppingButton,
-			maxScrolls: 4,
-			swipeDirection: 'up',
-		});
+	async continueShopping() {
+        // scroll down to reveal the button
+        await Gestures.scrollToElement({
+            element: this.continuesShoppingButton,
+            maxScrolls: 4,
+            swipeDirection: 'down',
+        });
 
-		return this.continuesShoppingButton.click();
-	}
+        // wait for it to be visible then click
+        await this.continuesShoppingButton.waitForDisplayed({ timeout: 3000 });
+        return this.continuesShoppingButton.click();
+    }
+
+	/**
+     * Wait until the complete screen is shown
+     * @param {number} timeout
+     */
+    async waitForIsShown(timeout = 5000) {
+        const el = await this.screen;
+        await el.waitForDisplayed({ timeout });
+        return true;
+    }
+
+    /**
+     * Return boolean whether complete screen is visible
+     */
+    async isShown() {
+        const el = await this.screen;
+        return (await el.isExisting()) && (await el.isDisplayed());
+    }
 }
 
 export default new CheckoutComplete();

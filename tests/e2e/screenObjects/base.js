@@ -12,7 +12,7 @@ export default class Base {
 	 *
 	 * @return {boolean}
 	 */
-	waitForIsShown(element = null) {
+	async waitForIsShown(element = null) {
 		return driver.waitUntil(
 			() => this.isShown(element),
 			{
@@ -46,7 +46,7 @@ export default class Base {
 	 *
 	 * @return {boolean}
 	 */
-	isShown(element) {
+	async isShown(element) {
 		// For android an element that is not visible is also not in the UI tree,
 		// so a different approach should be used
 		try {

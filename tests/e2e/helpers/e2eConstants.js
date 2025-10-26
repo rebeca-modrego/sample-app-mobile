@@ -1,4 +1,4 @@
-export const DEFAULT_TIMEOUT = 15000;
+export const DEFAULT_TIMEOUT = 30000;
 export const DEFAULT_PIN = 1234;
 export const INCORRECT_PIN = 4321;
 export const LOGIN_USERS = {

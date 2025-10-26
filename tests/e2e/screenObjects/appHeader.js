@@ -27,6 +27,7 @@ class AppHeader {
 	 * @return {void}
 	 */
 	openCart() {
+		driver.pause(100);
 		return this.cart.click();
 	}
 }

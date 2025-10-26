@@ -47,7 +47,7 @@ class CheckoutPageOne extends Base {
 	 * @param {string} personalInfo.lastName
 	 * @param {string} personalInfo.postalCode
 	 */
-	submitPersonalInfo(personalInfo) {
+	async submitPersonalInfo(personalInfo) {
 		const { firstName, lastName, zip } = personalInfo;
 
 		this.waitForIsShown();
