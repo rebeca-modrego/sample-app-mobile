@@ -288,103 +288,11 @@ async waitForInventoryListScreen() {
 	 *
 	 * @return {string}
 	 */
-	// ...existing code...
-async getErrorMessage(timeout = DEFAULT_TIMEOUT, throwOnMissing = false, expectedType = null) {
-    const errors = this.SELECTORS?.login?.errors || {};
-    const expectedMap = {
-        no_username: errors.username || 'Username is required',
-        no_password: errors.password || 'Password is required',
-        locked: errors.lockedOut || 'Sorry, this user has been locked out.',
-        no_match: errors.noMatch || 'Username and password do not match any user in this service.',
-    };
+	async getErrorMessage() {
+		this.errorMessage.waitForDisplayed({ timeout: DEFAULT_TIMEOUT });
 
-    const accId = `test-${ this.SELECTORS?.login?.errors?.container || 'Error message' }`;
-    // always re-query the element fresh
-    const el = await $(`~${accId}`);
-
-    try {
-        // ensure it exists and is displayed
-        await el.waitForExist({ timeout });
-        await el.waitForDisplayed({ timeout });
-    } catch (waitErr) {
-        if (expectedType && expectedMap[expectedType]) {
-            throw new Error(`Expected error "${expectedMap[expectedType]}" for scenario "${expectedType}", but error element did not appear.`);
-        }
-        if (throwOnMissing) {
-            let src = '<no pageSource>';
-            try { src = await browser.getPageSource(); } catch (e) { src = `pageSource error: ${e.message}`; }
-            const screenshotPath = `./reports/screenshots/missing-error-${Date.now()}.png`;
-            try { await browser.saveScreenshot(screenshotPath); } catch (_) {}
-            throw new Error(`Error message not found after ${timeout}ms. Last error: ${waitErr.message}\nSaved screenshot: ${screenshotPath}\n--- pageSource ---\n${src}`);
-        }
-        return '';
-    }
-
-    // Wait until the element contains non-empty text, using the full timeout
-    try {
-        await browser.waitUntil(
-            async () => {
-                try {
-                    const t1 = (await el.getText()) || '';
-                    if (t1.trim().length > 0) return true;
-                    const attrText = (await el.getAttribute('text')) || '';
-                    if (attrText.trim().length > 0) return true;
-                    const children = await el.$$('./*'); // direct children
-                    for (const c of children) {
-                        try {
-                            const ct = (await c.getText()) || (await c.getAttribute('text')) || '';
-                            if (ct.trim().length > 0) return true;
-                        } catch (_) {}
-                    }
-                    return false;
-                } catch (_) {
-                    return false;
-                }
-            },
-            { timeout, interval: 200, timeoutMsg: 'error text not populated' }
-        );
-    } catch (waitTextErr) {
-        // continue to attempt to read whatever is available below
-    }
-
-    // attempt multiple fallbacks to extract a text value
-    let txt = '';
-    try { txt = (await el.getText()) || ''; } catch (_) { /*ignore*/ }
-    if (!txt) {
-        try { txt = (await el.getAttribute('text')) || ''; } catch (_) { /*ignore*/ }
-    }
-    if (!txt) {
-        // look for child TextView(s)
-        try {
-            const children = await el.$$('android.widget.TextView');
-            for (const c of children) {
-                try {
-                    const ct = (await c.getText()) || (await c.getAttribute('text')) || '';
-                    if (ct && ct.trim().length > 0) { txt = ct; break; }
-                } catch (_) {}
-            }
-        } catch (_) {}
-    }
-
-    txt = (txt || '').trim();
-
-    if (!txt) {
-        if (expectedType && expectedMap[expectedType]) {
-            let src = '<no pageSource>';
-            try { src = await browser.getPageSource(); } catch (e) { src = `pageSource error: ${e.message}`; }
-            throw new Error(`Error text mismatch for scenario "${expectedType}".\nExpected to include: "${expectedMap[expectedType]}"\nActual: "<empty>"\n--- pageSource ---\n${src}`);
-        }
-        if (throwOnMissing) {
-            let src = '<no pageSource>';
-            try { src = await browser.getPageSource(); } catch (e) { src = `pageSource error: ${e.message}`; }
-            const screenshotPath = `./reports/screenshots/empty-error-${Date.now()}.png`;
-            try { await browser.saveScreenshot(screenshotPath); } catch (_) {}
-            throw new Error(`Error element present but contained no text after ${timeout}ms.\nSaved screenshot: ${screenshotPath}\n--- pageSource ---\n${src}`);
-        }
-    }
-
-    return txt;
-}
+		return getTextOfElement(this.errorMessage);
+	}
 
 	/**
 	 * Check if the error message is displayed

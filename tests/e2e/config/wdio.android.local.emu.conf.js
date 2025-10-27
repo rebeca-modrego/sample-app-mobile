@@ -10,11 +10,6 @@ const appPath =
   '/Users/rmodrego/src/sample-app-mobile/apps/Android.SauceLabs.Mobile.Sample.app.2.7.1.apk';
 
 // =======================
-// Specs
-// =======================
-config.specs = ['./tests/e2e/spec/**/*.spec.js'];
-
-// =======================
 // Services
 // =======================
 config.services = [
@@ -56,18 +51,7 @@ config.capabilities = [
 // =======================
 // Hooks
 // =======================
-config.beforeSession = function (config, capabilities, specs) {
-  const serial = process.env.ANDROID_SERIAL; // optional if only one emulator is connected
-
-  if (appPath && fs.existsSync(appPath) && serial) {
-    try {
-      console.log(`Installing app from ${appPath} on device ${serial}...`);
-      execSync(`adb -s ${serial} install -r "${appPath}"`, { stdio: 'inherit' });
-      console.log('App installed successfully.');
-    } catch (err) {
-      console.warn('App installation failed or skipped:', err.message);
-    }
-  }
+config.beforeSession = function (capabilities) {
 
   global.driverConfig = {
     language: capabilities['appium:language'] || 'en',

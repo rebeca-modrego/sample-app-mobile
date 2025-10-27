@@ -5,13 +5,10 @@ import { BUNDLE_IDS, DEFAULT_TIMEOUT } from './e2eConstants';
  * the app needs to be reset
  */
 export async function restartApp() {
-	const appPackage = 'com.swaglabsmobileapp';
+	const appPackage = BUNDLE_IDS.ANDROID;
 	try {
         // Terminate the app if it's running
         await driver.execute('mobile: terminateApp', { appId: appPackage });
-
-        // Optionally clear app data if you want a clean state
-        // await driver.execute('mobile: clearApp', { appId: appPackage });
 
         // Activate the app again
         await driver.execute('mobile: activateApp', { appId: appPackage });
@@ -30,7 +27,6 @@ export async function restartApp() {
  *
  * @return {string}
  */
-// ...existing code...
 export async function getTextOfElement(element, isXpath = false) {
     // tolerate null/undefined
     if (!element) return '';
@@ -93,7 +89,6 @@ export async function getTextOfElement(element, isXpath = false) {
         return ((await element.getText().catch(() => '')) || '').trim();
     }
 }
-// ...existing code...
 /**
  * Get the app state for iOS, see
  * http://appium.io/docs/en/writing-running-appium/ios/ios-xctest-mobile-apps-management/

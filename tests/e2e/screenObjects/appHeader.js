@@ -26,7 +26,7 @@ class AppHeader {
 	 *
 	 * @return {void}
 	 */
-	openCart() {
+	async openCart() {
 		driver.pause(100);
 		return this.cart.click();
 	}

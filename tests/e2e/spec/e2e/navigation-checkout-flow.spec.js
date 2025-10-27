@@ -9,9 +9,8 @@ import CheckoutPageTwo from '../../screenObjects/checkoutPageTwo';
 import CheckoutComplete from '../../screenObjects/checkoutComplete';
 import { PERSONAL_INFO } from '../../helpers/e2eConstants';
 
-describe('Navigation / Checkout flow', () => {
+describe('Login, navigation and checkout flow', () => {
   let SELECTORS;
-  jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
 
   beforeEach(async () => {
     SELECTORS = languageSelectors(driver.config);
@@ -19,9 +18,10 @@ describe('Navigation / Checkout flow', () => {
 
   it('should show an error when no username is provided', async () => {
       await restartApp();
+      await LoginScreen.waitForIsShown();
       await LoginScreen.signIn(LOGIN_USERS.NO_USER_DETAILS);
       let errorText;
-      errorText = await LoginScreen.getErrorMessage2();
+      errorText = await LoginScreen.getErrorMessage( {timeout: 10000} );
       console.log('errorText:', errorText);
       expect(errorText).toContain(SELECTORS.login.errors.username);
   });
@@ -29,27 +29,26 @@ describe('Navigation / Checkout flow', () => {
   it('should show an error when no password is provided', async () => {
       await LoginScreen.signIn(LOGIN_USERS.NO_PASSWORD);
       let errorText;
-      errorText = await LoginScreen.getErrorMessage2(10000, true);
+      errorText = await LoginScreen.getErrorMessage( {timeout: 10000} );
       console.log('errorText:', errorText);
       expect(errorText).toContain(SELECTORS.login.errors.password);
       });
 
   it('should not be able to login with a locked user', async () => {
-      //await restartApp();
       await LoginScreen.signIn(LOGIN_USERS.LOCKED);
       let errorText;
-      errorText = await LoginScreen.getErrorMessage2();
+      errorText = await LoginScreen.getErrorMessage({timeout: 10000});
       expect(errorText).toContain(SELECTORS.login.errors.lockedOut);
   });
 
   it('should show an error when no match is found', async () => {
       await LoginScreen.signIn(LOGIN_USERS.NO_MATCH);
       let errorText;
-      errorText = await LoginScreen.getErrorMessage2();
+      errorText = await LoginScreen.getErrorMessage({timeout: 10000});
       expect(errorText).toContain(SELECTORS.login.errors.noMatch);
   });
 
-  it('User logs in with standard user', async () => {
+  it('User logs in with valid standard user and he is redirected to inventory', async () => {
     await LoginScreen.signIn(LOGIN_USERS.STANDARD);
     await InventoryListScreen.waitForIsShown();
   });
@@ -59,13 +58,14 @@ describe('Navigation / Checkout flow', () => {
     await InventoryListScreen.addSwagItemToCart(SELECTORS.products.bikeLight.name);
   });
 
-  it('User opens the cart', async () => {
+  it('User opens the cart and check items are there', async () => {
     await AppHeader.openCart();
+    await driver.pause(1000); // small pause to allow UI update
     await CartContent.waitForIsShown();
     expect(await CartContent.getSwagItemCount()).toBe(2);
   });
 
-  it('User removes an item from the cart', async () => {
+  it('User removes one item from the cart and verifies the number decreases in 1', async () => {
     await CartContent.removeSwagItem(SELECTORS.products.backpack.name);
     await driver.pause(500); // small pause to allow UI update
     expect(await CartContent.getSwagItemCount()).toBe(1);
@@ -82,9 +82,8 @@ describe('Navigation / Checkout flow', () => {
     await CheckoutPageTwo.waitForIsShown();
   });
 
-  it('User completes the checkout', async () => {
+  it('User completes the checkout and the finish checkout page is shown', async () => {
     await CheckoutPageTwo.finishCheckout();
     await CheckoutComplete.waitForIsShown();
-    //await driver.pause(3000);
   });
 });
