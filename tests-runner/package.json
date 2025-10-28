@@ -1,6 +1,7 @@
 {
   "name": "sample-app-mobile-e2e-runner",
   "private": true,
+  "type": "module",
   "version": "0.0.0",
   "devDependencies": {
     "@cucumber/cucumber": "^9",
@@ -13,10 +14,6 @@
     "webdriverio": "^8"
   },
   "scripts": {
-    "test": "wdio run ../tests/e2e/config/wdio.android.local.emu.conf.js",
-    "test:spec": "wdio run ../tests/e2e/config/wdio.android.local.emu.conf.js --spec",
-    "test:nav": "wdio run ../tests/e2e/config/wdio.android.local.emu.conf.js --spec ../tests/e2e/features/navigation-checkout.feature",
-    "allure:generate": "allure generate reports/allure-results --clean -o reports/allure-report",
-    "allure:open": "allure open reports/allure-report"
+    "test": "wdio run ../tests/e2e/config/wdio.android.local.emu.conf.js"
   }
 }
