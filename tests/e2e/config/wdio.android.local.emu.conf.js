@@ -59,5 +59,18 @@ config.beforeSession = function (capabilities) {
   };
 };
 
+// resolve features/step-defs relative to this config file so the tests-runner can run it
+config.specs = [
+  join(__dirname, '..', 'features', '**', '*.feature')
+];
+
+config.framework = 'cucumber';
+config.cucumberOpts = {
+  require: [
+    join(__dirname, '..', 'features', 'step-definitions', '**', '*.js')
+  ],
+  timeout: 300000
+};
+
 // Export config
 exports.config = config;
