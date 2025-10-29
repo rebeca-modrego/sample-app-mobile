@@ -3,6 +3,9 @@ const { argv } = require('yargs');
 const fs = require('fs');
 const { execSync } = require('child_process');
 const { config } = require('./wdio.appium.local.shared');
+const rawSpec = argv.spec || (Array.isArray(argv._) && argv._.length ? argv._[0] : '');
+let specArg = Array.isArray(rawSpec) ? rawSpec[0] : (rawSpec || '');
+specArg = String(specArg);
 
 // Define the app path
 const appPath =
@@ -60,17 +63,28 @@ config.beforeSession = function (capabilities) {
 };
 
 // resolve features/step-defs relative to this config file so the tests-runner can run it
-config.specs = [
-  join(__dirname, '..', 'features', '**', '*.feature')
-];
-
-config.framework = 'cucumber';
-config.cucumberOpts = {
-  require: [
-    join(__dirname, '..', 'features', 'step-definitions', '**', '*.js')
-  ],
-  timeout: 300000
-};
+if (specArg.includes('.feature')) {
+  config.specs = [
+    join(__dirname, '..', 'features', '**', '*.feature')
+  ];
+  config.framework = 'cucumber';
+  config.cucumberOpts = {
+    require: [
+      join(__dirname, '..', 'features', 'step-definitions', '**', '*.js')
+    ],
+    timeout: 300000
+  };
+  // ensure jasmine settings removed
+  if (config.jasmineNodeOpts) delete config.jasmineNodeOpts;
+} else {
+  // default to jasmine for .spec.js runs
+  config.specs = [
+    join(__dirname, '..', 'spec', 'e2e', '**', '*.spec.js')
+  ];
+  config.framework = 'jasmine';
+  // make sure cucumber options are removed
+  if (config.cucumberOpts) delete config.cucumberOpts;
+}
 
 // Export config
 exports.config = config;
